@@ -1,8 +1,8 @@
-import { Router } from 'express'
-import { createMesa } from '../controllers/mesaController'
-const router = Router()
+import { Router } from "express";
+import tableRouter from "./table.routes.js";
+const router = Router();
 
 //rutas
-router.use("/mesa",createMesa)
+router.use("/mesa", tableRouter);
 
-export default router 
+export default router;
