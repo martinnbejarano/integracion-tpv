@@ -2,37 +2,27 @@ import { Schema, model } from "mongoose";
 
 const userSchema = new Schema(
   {
-    name: { type: String, required: true },
-    direction: { type: String, required: true },
-    companies: {
-      type: [
-        {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Company",
-          required: true,
-        },
-      ],
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    role: {
+      type: String,
+      enum: ["company_admin", "branch_admin"],
+      required: true,
     },
-    branches: {
-      type: [
-        {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Branch",
-          required: true,
-        },
-      ],
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
     },
-    tables: {
-      type: [
-        {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Table",
-          required: true,
-        },
-      ],
+    branch: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Branch",
+      required: function () {
+        return this.role === "branch_admin";
+      },
     },
   },
   { timestamps: true, versionKey: false }
 );
 
-export const user = model("User", employeeSchema);
+export const User = model("User", userSchema);
