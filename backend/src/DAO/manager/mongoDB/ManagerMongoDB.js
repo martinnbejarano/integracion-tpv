@@ -37,7 +37,6 @@ class ManagerMongoDB {
   // Actualiza un documento por su id
   async update(id, doc) {
     try {
-      console.log(typeof id);
       const updateDoc = await this.collection.findByIdAndUpdate(id, doc);
       return updateDoc;
     } catch (err) {

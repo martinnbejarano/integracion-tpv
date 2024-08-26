@@ -8,9 +8,9 @@ import router from "./routes/index.routes.js";
 import passport from "passport";
 import cookieParser from "cookie-parser";
 import session from "express-session";
-import initializePassport from "./config/passport.js";
+import initializePassport from "./utils/passport.config.js";
 
-//import sockets from './sockets.js'
+//import sockets from "./sockets.js";
 
 const app = express();
 
