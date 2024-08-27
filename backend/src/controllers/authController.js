@@ -1,4 +1,5 @@
 import { envConfig } from "../utils/env.config.js";
+import { companyApi, branchApi } from "../utils/passport.config.js";
 
 export const login = async (req, res) => {
   try {
@@ -31,10 +32,43 @@ export const logout = (req, res) => {
 
 export const register = async (req, res) => {
   try {
-    // Passport ya ha creado el usuario y generado el token
-    res
-      .status(201)
-      .json({ message: "Usuario registrado exitosamente", payload: req.user });
+    if (!req.user || !req.user.user) {
+      return res.status(400).json({ error: "Error en el registro de usuario" });
+    }
+
+    const { user, token } = req.user;
+    console.log("user: ", user);
+    let responseData = {
+      message: "Usuario registrado exitosamente",
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+      },
+      token: token,
+    };
+
+    if (user.role === "company_admin") {
+      const company = await companyApi.getOne(user.company);
+      responseData.company = {
+        id: company._id,
+        name: company.name,
+      };
+    } else if (user.role === "branch_admin") {
+      const branch = await branchApi.getOne(user.branch);
+      const company = await companyApi.getOne(user.company);
+      responseData.branch = {
+        id: branch._id,
+        name: branch.name,
+        direction: branch.direction,
+      };
+      responseData.company = {
+        id: company._id,
+        name: company.name,
+      };
+    }
+
+    res.status(201).json(responseData);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error al registrar usuario" });

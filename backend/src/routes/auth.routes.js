@@ -6,15 +6,14 @@ import {
   register,
   failLogin,
   failRegister,
+  getCurrentUser,
 } from "../controllers/authController.js";
-//import { isAdmin } from "../middlewares/authMiddleware.js"; // Asumiendo que tienes este middleware
 
 const router = Router();
 
 // Ruta de registro
 router.post(
   "/register",
-  //isAdmin,
   passport.authenticate("register", {
     failureRedirect: "/auth/failregister",
     session: false,
@@ -49,9 +48,7 @@ router.post(
 router.get(
   "/current",
   passport.authenticate("jwt", { session: false }),
-  (req, res) => {
-    res.send(req.user);
-  }
+  getCurrentUser
 );
 
 export default router;
