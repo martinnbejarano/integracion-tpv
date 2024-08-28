@@ -6,8 +6,12 @@ import { envConfig } from "../utils/env.config.js";
 import jsonwebtoken from "jsonwebtoken";
 import { createHash, isValidPassword } from "../utils/bcrypt.config.js";
 import { UserMongoDB } from "../DAO/manager/mongoDB/User.mongoDB.js";
+import { CompanyMongoDB } from "../DAO/manager/mongoDB/Company.mongoDB.js";
+import { BranchMongoDB } from "../DAO/manager/mongoDB/Branch.mongoDB.js";
 
 export const userApi = new UserMongoDB();
+export const companyApi = new CompanyMongoDB();
+export const branchApi = new BranchMongoDB();
 
 const cookieExtractor = (req) => {
   let token = null;
@@ -45,19 +49,45 @@ const initializePassport = () => {
     new LocalStrategy(
       { passReqToCallback: true, usernameField: "email", session: false },
       async (req, username, password, done) => {
-        const { email, role, company, branch } = req.body;
+        const { email, role, companyName, branchName, branchDirection } =
+          req.body;
         try {
+          if (!email) {
+            return done(null, false, { message: "El email es requerido" });
+          }
+          console.log(username, email);
           const user = await userApi.findUserByEmail(username);
           if (user) {
-            console.log(user);
-            return done(null, false);
+            return done(null, false, {
+              message: "El email ya está registrado",
+            });
           }
+
+          let company, branch;
+          if (role === "company_admin") {
+            company = await companyApi.create({ name: companyName });
+          } else if (role === "branch_admin") {
+            const existingCompany = await companyApi.getOne(companyName);
+            if (!existingCompany) {
+              return done("Compañía no encontrada");
+            }
+            branch = await branchApi.create({
+              name: branchName,
+              direction: branchDirection,
+              company: existingCompany._id,
+            });
+            await companyApi.update(existingCompany._id, {
+              $push: { branches: branch._id },
+            });
+            company = existingCompany;
+          }
+
           const newUser = {
             email,
             password: createHash(password),
-            role: role || "company_admin",
-            company,
-            branch: role === "branch_admin" ? branch : undefined,
+            role,
+            company: company._id,
+            branch: role === "branch_admin" ? branch._id : undefined,
           };
           let result = await userApi.create(newUser);
           const token = jsonwebtoken.sign(
@@ -69,9 +99,11 @@ const initializePassport = () => {
             secure: true,
             maxAge: 3600000,
           });
-          return done(null, result);
+          return done(null, { user: result, token }); // Cambiado aquí
         } catch (error) {
-          return done("User Not found" + error);
+          return done(null, false, {
+            message: "Error al registrar usuario: " + error,
+          });
         }
       }
     )
