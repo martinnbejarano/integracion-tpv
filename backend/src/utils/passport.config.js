@@ -1,6 +1,7 @@
 import passport from "passport";
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import { Strategy as LocalStrategy } from "passport-local";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { User } from "../DAO/models/user.models.js";
 import { envConfig } from "../utils/env.config.js";
 import jsonwebtoken from "jsonwebtoken";
@@ -26,12 +27,17 @@ const initializePassport = () => {
     "jwt",
     new JwtStrategy(
       {
-        jwtFromRequest: ExtractJwt.fromExtractors([cookieExtractor]),
+        jwtFromRequest: ExtractJwt.fromExtractors([
+          ExtractJwt.fromAuthHeaderAsBearerToken(),
+          cookieExtractor,
+        ]),
         secretOrKey: envConfig.TOKEN_SECRET,
       },
       async (jwt_payload, done) => {
         try {
-          const user = await User.findById(jwt_payload.id);
+          console.log("jwt_payload: ", jwt_payload);
+          // Cambiamos jwt_payload.id por jwt_payload.user._id
+          const user = await User.findById(jwt_payload.user._id);
           if (user) {
             return done(null, user);
           } else {
@@ -57,7 +63,9 @@ const initializePassport = () => {
           }
           console.log(username, email);
           const user = await userApi.findUserByEmail(username);
+          console.log("user: ", user);
           if (user) {
+            console.log("user2: ", user);
             return done(null, false, {
               message: "El email ya está registrado",
             });
@@ -136,6 +144,37 @@ const initializePassport = () => {
         } catch (error) {
           console.log(error);
           return done(null, false);
+        }
+      }
+    )
+  );
+
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: envConfig.GOOGLE_CLIENT_ID,
+        clientSecret: envConfig.GOOGLE_CLIENT_SECRET,
+        callbackURL: "/auth/google/callback",
+      },
+      async (accessToken, refreshToken, profile, done) => {
+        try {
+          let user = await userApi.findUserByEmail(profile.emails[0].value);
+
+          if (!user) {
+            // Si el usuario no existe, lo creamos
+            const newUser = {
+              email: profile.emails[0].value,
+              password: createHash(Math.random().toString(36).substring(7)),
+              role: "user", // Asigna un rol predeterminado
+              googleId: profile.id,
+            };
+            user = await userApi.create(newUser);
+          }
+
+          const token = jsonwebtoken.sign({ user }, envConfig.TOKEN_SECRET);
+          return done(null, { user, token });
+        } catch (error) {
+          return done(error, false);
         }
       }
     )

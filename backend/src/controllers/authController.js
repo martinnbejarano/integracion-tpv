@@ -22,11 +22,18 @@ export const failLogin = (req, res) => {
 
 export const logout = (req, res) => {
   try {
+    console.log("Headers de la solicitud:", req.headers);
+    console.log("Usuario en la solicitud:", req.user);
+
+    // El middleware de Passport ya ha verificado la autenticación,
+    // así que podemos asumir que req.user existe
     res.clearCookie(envConfig.SIGNED_COOKIE);
     res.json({ message: "Sesión cerrada exitosamente" });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error al cerrar sesión" });
+    console.error("Error en logout:", error);
+    res
+      .status(500)
+      .json({ error: "Error al cerrar sesión", message: error.message });
   }
 };
 
@@ -37,7 +44,6 @@ export const register = async (req, res) => {
     }
 
     const { user, token } = req.user;
-    console.log("user: ", user);
     let responseData = {
       message: "Usuario registrado exitosamente",
       user: {
@@ -86,9 +92,21 @@ export const failRegister = (req, res) => {
 
 export const getCurrentUser = (req, res) => {
   try {
+    // El middleware de Passport ya ha verificado la autenticación,
+    // así que podemos asumir que req.user existe
     res.json(req.user);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error al obtener el usuario actual" });
   }
+};
+
+export const googleCallback = (req, res) => {
+  const token = req.user.token;
+  res.cookie(envConfig.SIGNED_COOKIE, token, {
+    httpOnly: true,
+    secure: true,
+    maxAge: 3600000,
+  });
+  res.redirect("/"); // Redirige a la página principal después de la autenticación exitosa
 };

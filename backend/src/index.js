@@ -34,7 +34,6 @@ app.use(
     },
   })
 );
-
 // Inicializar Passport
 initializePassport();
 app.use(passport.initialize());

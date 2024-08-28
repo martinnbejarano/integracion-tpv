@@ -7,6 +7,7 @@ import {
   failLogin,
   failRegister,
   getCurrentUser,
+  googleCallback,
 } from "../controllers/authController.js";
 
 const router = Router();
@@ -49,6 +50,22 @@ router.get(
   "/current",
   passport.authenticate("jwt", { session: false }),
   getCurrentUser
+);
+
+// Ruta para iniciar el proceso de autenticación con Google
+router.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+
+// Ruta de callback para Google
+router.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    failureRedirect: "/auth/faillogin",
+    session: false,
+  }),
+  googleCallback
 );
 
 export default router;
