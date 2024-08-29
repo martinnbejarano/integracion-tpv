@@ -8,6 +8,9 @@ import {
   failRegister,
   getCurrentUser,
   googleCallback,
+  requestAccountDeletion,
+  cancelAccountDeletion,
+  deleteUser,
 } from "../controllers/authController.js";
 
 const router = Router();
@@ -66,6 +69,27 @@ router.get(
     session: false,
   }),
   googleCallback
+);
+
+// Ruta para solicitar la eliminación de la cuenta
+router.post(
+  "/request-account-deletion",
+  passport.authenticate("jwt", { session: false }),
+  requestAccountDeletion
+);
+
+// Ruta para cancelar la solicitud de eliminación de la cuenta
+router.post(
+  "/cancel-account-deletion",
+  passport.authenticate("jwt", { session: false }),
+  cancelAccountDeletion
+);
+
+// Ruta para eliminar el usuario actual (protegida con JWT)
+router.delete(
+  "/delete-account",
+  passport.authenticate("jwt", { session: false }),
+  deleteUser
 );
 
 export default router;

@@ -63,9 +63,7 @@ const initializePassport = () => {
           }
           console.log(username, email);
           const user = await userApi.findUserByEmail(username);
-          console.log("user: ", user);
           if (user) {
-            console.log("user2: ", user);
             return done(null, false, {
               message: "El email ya está registrado",
             });

@@ -1,5 +1,6 @@
 import { Schema, model } from "mongoose";
 import mongoose from "mongoose";
+
 const userSchema = new Schema(
   {
     email: { type: String, required: true, unique: true },
@@ -21,6 +22,8 @@ const userSchema = new Schema(
         return this.role === "branch_admin";
       },
     },
+    accountDeletionRequested: { type: Boolean, default: false },
+    accountDeletionDate: { type: Date, default: null },
   },
   { timestamps: true, versionKey: false }
 );
