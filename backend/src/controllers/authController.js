@@ -1,5 +1,6 @@
 import { envConfig } from "../utils/env.config.js";
 import { companyApi, branchApi, userApi } from "../utils/passport.config.js";
+import { addToBlacklist } from "../utils/tokenBlacklist.js";
 
 export const login = async (req, res) => {
   try {
@@ -22,18 +23,19 @@ export const failLogin = (req, res) => {
 
 export const logout = (req, res) => {
   try {
-    console.log("Headers de la solicitud:", req.headers);
-    console.log("Usuario en la solicitud:", req.user);
-
-    // El middleware de Passport ya ha verificado la autenticación,
-    // así que podemos asumir que req.user existe
+    const token =
+      req.cookies[envConfig.SIGNED_COOKIE] ||
+      req.get("Authorization")?.split(" ")[1];
+    if (token) {
+      addToBlacklist(token);
+    }
     res.clearCookie(envConfig.SIGNED_COOKIE);
-    res.json({ message: "Sesión cerrada exitosamente" });
+    res.json({ mensaje: "Sesión cerrada exitosamente" });
   } catch (error) {
     console.error("Error en logout:", error);
     res
       .status(500)
-      .json({ error: "Error al cerrar sesión", message: error.message });
+      .json({ error: "Error al cerrar sesión", mensaje: error.message });
   }
 };
 

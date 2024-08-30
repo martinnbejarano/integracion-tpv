@@ -9,6 +9,7 @@ import { createHash, isValidPassword } from "../utils/bcrypt.config.js";
 import { UserMongoDB } from "../DAO/manager/mongoDB/User.mongoDB.js";
 import { CompanyMongoDB } from "../DAO/manager/mongoDB/Company.mongoDB.js";
 import { BranchMongoDB } from "../DAO/manager/mongoDB/Branch.mongoDB.js";
+import { isTokenBlacklisted } from "./tokenBlacklist.js";
 
 export const userApi = new UserMongoDB();
 export const companyApi = new CompanyMongoDB();
@@ -32,11 +33,16 @@ const initializePassport = () => {
           cookieExtractor,
         ]),
         secretOrKey: envConfig.TOKEN_SECRET,
+        passReqToCallback: true, // Añadir esta línea
       },
-      async (jwt_payload, done) => {
+      async (req, jwt_payload, done) => {
         try {
-          console.log("jwt_payload: ", jwt_payload);
-          // Cambiamos jwt_payload.id por jwt_payload.user._id
+          const token =
+            cookieExtractor(req) || req.get("Authorization")?.split(" ")[1];
+          if (isTokenBlacklisted(token)) {
+            return done(null, false, { message: "Token no válido" });
+          }
+
           const user = await User.findById(jwt_payload.user._id);
           if (user) {
             return done(null, user);
