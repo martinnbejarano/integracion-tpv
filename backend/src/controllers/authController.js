@@ -50,6 +50,8 @@ export const register = async (req, res) => {
         id: user._id,
         email: user.email,
         role: user.role,
+        accountDeletionRequested: user.accountDeletionRequested,
+        accountDeletionDate: user.accountDeletionDate,
       },
       token: token,
     };
@@ -129,19 +131,15 @@ export const requestAccountDeletion = async (req, res) => {
     // Enviar correo electrónico de confirmación
     // TODO: Implementar envío de correo electrónico
 
-    res
-      .status(200)
-      .json({
-        message:
-          "Solicitud de eliminación de cuenta recibida. La cuenta se eliminará en 30 días.",
-      });
+    res.status(200).json({
+      message:
+        "Solicitud de eliminación de cuenta recibida. La cuenta se eliminará en 30 días.",
+    });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({
-        error: "Error al procesar la solicitud de eliminación de cuenta",
-      });
+    res.status(500).json({
+      error: "Error al procesar la solicitud de eliminación de cuenta",
+    });
   }
 };
 
@@ -155,11 +153,9 @@ export const cancelAccountDeletion = async (req, res) => {
     }
 
     if (!user.accountDeletionRequested) {
-      return res
-        .status(400)
-        .json({
-          error: "No hay una solicitud de eliminación de cuenta pendiente",
-        });
+      return res.status(400).json({
+        error: "No hay una solicitud de eliminación de cuenta pendiente",
+      });
     }
 
     // Cancelar la solicitud de eliminación
@@ -168,18 +164,14 @@ export const cancelAccountDeletion = async (req, res) => {
       accountDeletionDate: null,
     });
 
-    res
-      .status(200)
-      .json({
-        message: "Solicitud de eliminación de cuenta cancelada exitosamente",
-      });
+    res.status(200).json({
+      message: "Solicitud de eliminación de cuenta cancelada exitosamente",
+    });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({
-        error: "Error al cancelar la solicitud de eliminación de cuenta",
-      });
+    res.status(500).json({
+      error: "Error al cancelar la solicitud de eliminación de cuenta",
+    });
   }
 };
 
@@ -201,12 +193,10 @@ export const deleteUser = async (req, res) => {
     // Verificar si han pasado 30 días desde la solicitud
     const deletionDate = new Date(user.accountDeletionDate);
     if (Date.now() < deletionDate.getTime()) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "Aún no ha pasado el período de espera para la eliminación de la cuenta",
-        });
+      return res.status(400).json({
+        error:
+          "Aún no ha pasado el período de espera para la eliminación de la cuenta",
+      });
     }
 
     // Proceder con la eliminación

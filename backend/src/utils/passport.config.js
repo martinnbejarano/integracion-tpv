@@ -94,6 +94,8 @@ const initializePassport = () => {
             role,
             company: company._id,
             branch: role === "branch_admin" ? branch._id : undefined,
+            accountDeletionRequested: false,
+            accountDeletionDate: null,
           };
           let result = await userApi.create(newUser);
           const token = jsonwebtoken.sign(
@@ -165,6 +167,8 @@ const initializePassport = () => {
               password: createHash(Math.random().toString(36).substring(7)),
               role: "user", // Asigna un rol predeterminado
               googleId: profile.id,
+              accountDeletionRequested: false,
+              accountDeletionDate: null,
             };
             user = await userApi.create(newUser);
           }
