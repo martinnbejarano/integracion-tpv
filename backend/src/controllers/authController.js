@@ -1,6 +1,7 @@
 import { envConfig } from "../utils/env.config.js";
 import { companyApi, branchApi, userApi } from "../utils/passport.config.js";
 import { addToBlacklist } from "../utils/tokenBlacklist.js";
+import { sendEmail } from "../utils/emailService.js";
 
 export const login = async (req, res) => {
   try {
@@ -130,8 +131,14 @@ export const requestAccountDeletion = async (req, res) => {
       accountDeletionDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 días en el futuro
     });
 
+    console.log("email", user.email);
     // Enviar correo electrónico de confirmación
-    // TODO: Implementar envío de correo electrónico
+    await sendEmail(
+      user.email,
+      "Solicitud de eliminación de cuenta",
+      "<html><body><h1>Su solicitud de eliminación de cuenta ha sido recibida</h1><p>Su cuenta será eliminada en 30 días.</p></body></html>",
+      { userName: user.email }
+    );
 
     res.status(200).json({
       message:
