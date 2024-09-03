@@ -24,6 +24,9 @@ const userSchema = new Schema(
     },
     accountDeletionRequested: { type: Boolean, default: false },
     accountDeletionDate: { type: Date, default: null },
+    isEmailVerified: { type: Boolean, default: false },
+    emailVerificationToken: { type: String },
+    emailVerificationTokenExpires: { type: Date },
   },
   { timestamps: true, versionKey: false }
 );

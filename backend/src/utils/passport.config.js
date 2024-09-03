@@ -102,6 +102,8 @@ const initializePassport = () => {
             branch: role === "branch_admin" ? branch._id : undefined,
             accountDeletionRequested: false,
             accountDeletionDate: null,
+            isEmailVerified: false,
+            emailVerificationToken: null, // Se generará en el controlador
           };
           let result = await userApi.create(newUser);
           const token = jsonwebtoken.sign(

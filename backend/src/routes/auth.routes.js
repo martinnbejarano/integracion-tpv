@@ -11,6 +11,8 @@ import {
   requestAccountDeletion,
   cancelAccountDeletion,
   deleteUser,
+  verifyEmail,
+  resendVerificationEmail,
 } from "../controllers/authController.js";
 
 const router = Router();
@@ -91,5 +93,11 @@ router.delete(
   passport.authenticate("jwt", { session: false }),
   deleteUser
 );
+
+// Ruta para verificar el correo electrónico
+router.get("/verify-email/:token", verifyEmail);
+
+// Ruta para reenviar el correo de verificación
+router.post("/resend-verification", resendVerificationEmail);
 
 export default router;
