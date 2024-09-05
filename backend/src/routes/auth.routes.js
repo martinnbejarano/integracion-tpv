@@ -6,13 +6,7 @@ import {
   register,
   failLogin,
   failRegister,
-  getCurrentUser,
   googleCallback,
-  requestAccountDeletion,
-  cancelAccountDeletion,
-  deleteUser,
-  verifyEmail,
-  resendVerificationEmail,
 } from "../controllers/authController.js";
 
 const router = Router();
@@ -50,13 +44,6 @@ router.post(
   logout
 );
 
-// Ruta para obtener el usuario actual (protegida con JWT)
-router.get(
-  "/current",
-  passport.authenticate("jwt", { session: false }),
-  getCurrentUser
-);
-
 // Ruta para iniciar el proceso de autenticación con Google
 router.get(
   "/google",
@@ -72,32 +59,5 @@ router.get(
   }),
   googleCallback
 );
-
-// Ruta para solicitar la eliminación de la cuenta
-router.post(
-  "/request-account-deletion",
-  passport.authenticate("jwt", { session: false }),
-  requestAccountDeletion
-);
-
-// Ruta para cancelar la solicitud de eliminación de la cuenta
-router.post(
-  "/cancel-account-deletion",
-  passport.authenticate("jwt", { session: false }),
-  cancelAccountDeletion
-);
-
-// Ruta para eliminar el usuario actual (protegida con JWT)
-router.delete(
-  "/delete-account",
-  passport.authenticate("jwt", { session: false }),
-  deleteUser
-);
-
-// Ruta para verificar el correo electrónico
-router.get("/verify-email/:token", verifyEmail);
-
-// Ruta para reenviar el correo de verificación
-router.post("/resend-verification", resendVerificationEmail);
 
 export default router;

@@ -14,4 +14,14 @@ export class UserMongoDB extends ManagerMongoDB {
       throw new Error("Error: " + err);
     }
   }
+  async findUserByVerificationToken(token) {
+    try {
+      const user = await this.collection.findOne({
+        emailVerificationToken: token,
+      });
+      return user;
+    } catch (error) {
+      throw new Error("Error: " + err);
+    }
+  }
 }
