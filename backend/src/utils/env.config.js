@@ -13,4 +13,5 @@ export const envConfig = {
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   BREVO_API_KEY: process.env.BREVO_API_KEY,
+  APP_URL: process.env.APP_URL,
 };

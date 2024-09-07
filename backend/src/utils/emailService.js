@@ -15,9 +15,12 @@ const sendEmail = async (to, subject, htmlContent, params = {}) => {
     name: "App Resto",
     email: "tomydominguez96@gmail.com",
   };
-  console.log(to);
   sendSmtpEmail.to = [{ email: to }];
-  sendSmtpEmail.params = params;
+
+  // Modificación aquí: solo incluir params si no está vacío
+  if (Object.keys(params).length > 0) {
+    sendSmtpEmail.params = params;
+  }
 
   try {
     const data = await apiInstance.sendTransacEmail(sendSmtpEmail);

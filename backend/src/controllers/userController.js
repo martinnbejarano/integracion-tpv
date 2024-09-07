@@ -1,6 +1,6 @@
-import { sendEmail } from "../utils/emailService";
-import { envConfig } from "../utils/env.config";
-import { branchApi, companyApi, userApi } from "../utils/passport.config";
+import { sendEmail } from "../utils/emailService.js";
+import { envConfig } from "../utils/env.config.js";
+import { branchApi, companyApi, userApi } from "../utils/passport.config.js";
 
 export const getCurrentUser = (req, res) => {
   try {
