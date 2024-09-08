@@ -93,6 +93,7 @@ export const register = async (req, res) => {
         accountDeletionDate: user.accountDeletionDate,
       },
       token: token,
+      emailVerificationToken: verificationToken,
     };
 
     if (user.role === "company_admin") {
@@ -124,7 +125,9 @@ export const register = async (req, res) => {
 
 export const failRegister = (req, res) => {
   try {
-    res.status(400).json({ error: "Error en el registro de usuario" });
+    const errorMessage =
+      req.session?.messages?.pop() || "Error en el registro de usuario";
+    res.status(400).json({ error: errorMessage });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error interno del servidor" });

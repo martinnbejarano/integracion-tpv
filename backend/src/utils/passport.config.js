@@ -3,9 +3,9 @@ import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { User } from "../DAO/models/user.models.js";
-import { envConfig } from "../utils/env.config.js";
+import { envConfig } from "./env.config.js";
 import jsonwebtoken from "jsonwebtoken";
-import { createHash, isValidPassword } from "../utils/bcrypt.config.js";
+import { createHash, isValidPassword } from "./bcrypt.config.js";
 import { UserMongoDB } from "../DAO/manager/mongoDB/User.mongoDB.js";
 import { CompanyMongoDB } from "../DAO/manager/mongoDB/Company.mongoDB.js";
 import { BranchMongoDB } from "../DAO/manager/mongoDB/Branch.mongoDB.js";
@@ -69,6 +69,7 @@ const initializePassport = () => {
           }
           console.log(username, email);
           const user = await userApi.findUserByEmail(username);
+          //console.log(user);
           if (user) {
             return done(null, false, {
               message: "El email ya está registrado",
@@ -79,7 +80,8 @@ const initializePassport = () => {
           if (role === "company_admin") {
             company = await companyApi.create({ name: companyName });
           } else if (role === "branch_admin") {
-            const existingCompany = await companyApi.getOne(companyName);
+            console.log(companyName);
+            const existingCompany = await companyApi.getOneByName(companyName);
             if (!existingCompany) {
               return done("Compañía no encontrada");
             }
@@ -105,6 +107,7 @@ const initializePassport = () => {
             isEmailVerified: false,
             emailVerificationToken: null, // Se generará en el controlador
           };
+          //console.log(newUser.email);
           let result = await userApi.create(newUser);
           const token = jsonwebtoken.sign(
             { user: result },
@@ -118,7 +121,7 @@ const initializePassport = () => {
           return done(null, { user: result, token }); // Cambiado aquí
         } catch (error) {
           return done(null, false, {
-            message: "Error al registrar usuario: " + error,
+            message: "Error al registrar usuario: " + error.message,
           });
         }
       }

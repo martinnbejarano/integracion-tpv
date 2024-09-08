@@ -15,4 +15,12 @@ export class CompanyMongoDB extends ManagerMongoDB {
       throw new Error("Error: " + err);
     }
   }
+  async getOneByName(name) {
+    try {
+      const company = await this.collection.findOne({ name });
+      return company;
+    } catch (err) {
+      throw new Error("Error: " + err);
+    }
+  }
 }
