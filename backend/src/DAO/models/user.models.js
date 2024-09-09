@@ -27,6 +27,8 @@ const userSchema = new Schema(
     isEmailVerified: { type: Boolean, default: false },
     emailVerificationToken: { type: String },
     emailVerificationTokenExpires: { type: Date },
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
   },
   { timestamps: true, versionKey: false }
 );

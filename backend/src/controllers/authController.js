@@ -3,6 +3,12 @@ import { companyApi, branchApi, userApi } from "../utils/passport.config.js";
 import { addToBlacklist } from "../utils/tokenBlacklist.js";
 import { sendEmail } from "../utils/emailService.js";
 import { generateVerificationToken } from "../utils/verificationToken.js";
+import { createHash } from "../utils/bcrypt.config.js";
+import {
+  getVerificationEmailTemplate,
+  getPasswordResetEmailTemplate,
+  getPasswordResetConfirmationTemplate,
+} from "../utils/emailTemplates.js";
 
 export const login = async (req, res) => {
   try {
@@ -69,16 +75,10 @@ export const register = async (req, res) => {
     });
 
     // Enviar correo de verificación
-    const verificationLink = `${envConfig.APP_URL}/verify-email/${verificationToken}`;
     await sendEmail(
       user.email,
       "Verificación de correo electrónico",
-      `<html><body>
-        <h1>Bienvenido a nuestra aplicación</h1>
-        <p>Por favor, haga clic en el siguiente enlace para verificar su correo electrónico:</p>
-        <a href="${verificationLink}">Verificar correo electrónico</a>
-        <p>Este enlace expirará en 24 horas.</p>
-      </body></html>`
+      getVerificationEmailTemplate(verificationToken)
     );
 
     let responseData = {
@@ -204,12 +204,7 @@ export const resendVerificationEmail = async (req, res) => {
     await sendEmail(
       user.email,
       "Verificación de correo electrónico",
-      `<html><body>
-        <h1>Verificación de correo electrónico</h1>
-        <p>Por favor, haga clic en el siguiente enlace para verificar su correo electrónico:</p>
-        <a href="${verificationLink}">Verificar correo electrónico</a>
-        <p>Este enlace expirará en 24 horas.</p>
-      </body></html>`
+      getVerificationEmailTemplate(verificationToken)
     );
 
     res.json({ message: "Se ha enviado un nuevo correo de verificación" });
@@ -218,5 +213,65 @@ export const resendVerificationEmail = async (req, res) => {
     res
       .status(500)
       .json({ error: "Error al reenviar el correo de verificación" });
+  }
+};
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await userApi.findUserByEmail(email);
+
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    const { verificationToken, tokenExpiration } = generateVerificationToken(1); // Token válido por 1 hora
+
+    await userApi.update(user._id, {
+      resetPasswordToken: verificationToken,
+      resetPasswordExpires: tokenExpiration,
+    });
+
+    await sendEmail(
+      user.email,
+      "Restablecimiento de contraseña",
+      getPasswordResetEmailTemplate(verificationToken)
+    );
+
+    res.status(200).json({ message: "Correo de restablecimiento enviado" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al procesar la solicitud" });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    const user = await userApi.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Token inválido o expirado" });
+    }
+
+    const hashedPassword = createHash(password);
+
+    await userApi.update(user._id, {
+      password: hashedPassword,
+      resetPasswordToken: undefined,
+      resetPasswordExpires: undefined,
+    });
+
+    await sendEmail(user.email, getPasswordResetConfirmationTemplate());
+
+    res.status(200).json({ message: "Contraseña restablecida exitosamente" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al restablecer la contraseña" });
   }
 };

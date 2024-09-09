@@ -61,4 +61,10 @@ router.get(
   googleCallback
 );
 
+// Ruta para solicitar restablecimiento de contraseña
+router.post("/forgot-password", forgotPassword);
+
+// Ruta para restablecer la contraseña
+router.post("/reset-password/:token", resetPassword);
+
 export default router;
