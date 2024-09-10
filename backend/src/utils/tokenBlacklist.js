@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { envConfig } from "./env.config.js";
+import { AppError } from "../middlewares/errorHandlers/AppError.js";
 
 // Usaremos un Map en lugar de un Set para almacenar los tokens junto con su tiempo de expiración
 let tokenBlacklist = new Map();
@@ -10,7 +11,10 @@ export const addToBlacklist = (token) => {
     const expirationTime = decoded.exp * 1000; // Convertir a milisegundos
     tokenBlacklist.set(token, expirationTime);
   } catch (error) {
-    console.error("Error al añadir token a la lista negra:", error);
+    throw new AppError(
+      `Error al añadir token a la lista negra: ${error.message}`,
+      500
+    );
   }
 };
 

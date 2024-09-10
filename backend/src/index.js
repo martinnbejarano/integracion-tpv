@@ -9,6 +9,7 @@ import passport from "passport";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import initializePassport from "./utils/passport.config.js";
+import { errorHandler } from "./middlewares/errorHandlers/errorHandler.js";
 
 //import sockets from "./sockets.js";
 
@@ -40,6 +41,9 @@ app.use(passport.initialize());
 
 //ruta
 app.use("/", router);
+
+// Manejador de errores
+app.use(errorHandler);
 
 const connectedServer = httpServer.listen(envConfig.PORT, () => {
   console.log(`Server is up and running on port ${envConfig.PORT}`);

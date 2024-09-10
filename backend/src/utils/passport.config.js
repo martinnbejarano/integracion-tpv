@@ -10,6 +10,7 @@ import { UserMongoDB } from "../DAO/manager/mongoDB/User.mongoDB.js";
 import { CompanyMongoDB } from "../DAO/manager/mongoDB/Company.mongoDB.js";
 import { BranchMongoDB } from "../DAO/manager/mongoDB/Branch.mongoDB.js";
 import { isTokenBlacklisted } from "./tokenBlacklist.js";
+import { AppError } from "../middlewares/errorHandlers/AppError.js";
 
 export const userApi = new UserMongoDB();
 export const companyApi = new CompanyMongoDB();
@@ -33,24 +34,27 @@ const initializePassport = () => {
           cookieExtractor,
         ]),
         secretOrKey: envConfig.TOKEN_SECRET,
-        passReqToCallback: true, // Añadir esta línea
+        passReqToCallback: true,
       },
       async (req, jwt_payload, done) => {
         try {
           const token =
             cookieExtractor(req) || req.get("Authorization")?.split(" ")[1];
           if (isTokenBlacklisted(token)) {
-            return done(null, false, { message: "Token no válido" });
+            return done(new AppError("Token no válido", 401), false);
           }
 
           const user = await User.findById(jwt_payload.user._id);
           if (user) {
             return done(null, user);
           } else {
-            return done(null, false);
+            return done(new AppError("Usuario no encontrado", 404), false);
           }
         } catch (error) {
-          return done(error, false);
+          return done(
+            new AppError(`Error en autenticación JWT: ${error.message}`, 500),
+            false
+          );
         }
       }
     )
@@ -65,25 +69,23 @@ const initializePassport = () => {
           req.body;
         try {
           if (!email) {
-            return done(null, false, { message: "El email es requerido" });
+            return done(new AppError("El email es requerido", 400), false);
           }
-          console.log(username, email);
           const user = await userApi.findUserByEmail(username);
-          //console.log(user);
           if (user) {
-            return done(null, false, {
-              message: "El email ya está registrado",
-            });
+            return done(
+              new AppError("El email ya está registrado", 400),
+              false
+            );
           }
 
           let company, branch;
           if (role === "company_admin") {
             company = await companyApi.create({ name: companyName });
           } else if (role === "branch_admin") {
-            console.log(companyName);
             const existingCompany = await companyApi.getOneByName(companyName);
             if (!existingCompany) {
-              return done("Compañía no encontrada");
+              return done(new AppError("Compañía no encontrada", 404), false);
             }
             branch = await branchApi.create({
               name: branchName,
@@ -105,9 +107,8 @@ const initializePassport = () => {
             accountDeletionRequested: false,
             accountDeletionDate: null,
             isEmailVerified: false,
-            emailVerificationToken: null, // Se generará en el controlador
+            emailVerificationToken: null,
           };
-          //console.log(newUser.email);
           let result = await userApi.create(newUser);
           const token = jsonwebtoken.sign(
             { user: result },
@@ -118,11 +119,12 @@ const initializePassport = () => {
             secure: true,
             maxAge: 3600000,
           });
-          return done(null, { user: result, token }); // Cambiado aquí
+          return done(null, { user: result, token });
         } catch (error) {
-          return done(null, false, {
-            message: "Error al registrar usuario: " + error.message,
-          });
+          return done(
+            new AppError(`Error al registrar usuario: ${error.message}`, 500),
+            false
+          );
         }
       }
     )
@@ -135,14 +137,11 @@ const initializePassport = () => {
       async (req, email, password, done) => {
         try {
           const user = await userApi.findUserByEmail(email);
-          console.log(" User login " + user);
-
           if (!user) {
-            return done(null, false);
+            return done(new AppError("Usuario no encontrado", 404), false);
           }
-
           if (!isValidPassword(user, password)) {
-            return done(null, false);
+            return done(new AppError("Contraseña incorrecta", 401), false);
           }
           const token = jsonwebtoken.sign({ user }, envConfig.TOKEN_SECRET);
           req.res.cookie(envConfig.SIGNED_COOKIE, token, {
@@ -150,11 +149,12 @@ const initializePassport = () => {
             secure: true,
             maxAge: 3600000,
           });
-          console.log({ token });
           return done(null, { user, token });
         } catch (error) {
-          console.log(error);
-          return done(null, false);
+          return done(
+            new AppError(`Error en inicio de sesión: ${error.message}`, 500),
+            false
+          );
         }
       }
     )
@@ -172,11 +172,10 @@ const initializePassport = () => {
           let user = await userApi.findUserByEmail(profile.emails[0].value);
 
           if (!user) {
-            // Si el usuario no existe, lo creamos
             const newUser = {
               email: profile.emails[0].value,
               password: createHash(Math.random().toString(36).substring(7)),
-              role: "user", // Asigna un rol predeterminado
+              role: "user",
               googleId: profile.id,
               accountDeletionRequested: false,
               accountDeletionDate: null,
@@ -187,7 +186,13 @@ const initializePassport = () => {
           const token = jsonwebtoken.sign({ user }, envConfig.TOKEN_SECRET);
           return done(null, { user, token });
         } catch (error) {
-          return done(error, false);
+          return done(
+            new AppError(
+              `Error en autenticación Google: ${error.message}`,
+              500
+            ),
+            false
+          );
         }
       }
     )

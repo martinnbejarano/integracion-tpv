@@ -60,3 +60,14 @@ export const getAccountDeletionCancellationTemplate = () => {
     </html>
   `;
 };
+
+export const getAccountDeletedTemplate = () => {
+  return `
+    <html>
+      <body>
+        <h1>Su cuenta ha sido eliminada exitosamente</h1>
+        <p>Lamentamos verle partir. Si desea volver a usar nuestros servicios en el futuro, por favor cree una nueva cuenta.</p>
+      </body>
+    </html>
+  `;
+};

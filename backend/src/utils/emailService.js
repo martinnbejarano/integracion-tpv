@@ -1,11 +1,12 @@
 import brevo from "@getbrevo/brevo";
 import { envConfig } from "./env.config.js";
+import { AppError } from "../middlewares/errorHandlers/AppError.js";
 
 const sendEmail = async (to, subject, htmlContent, params = {}) => {
   let apiInstance = new brevo.TransactionalEmailsApi();
 
   let apiKey = apiInstance.authentications["apiKey"];
-  apiKey.apiKey = envConfig.BREVO_API_KEY; // Asegúrese de agregar esta variable de entorno
+  apiKey.apiKey = envConfig.BREVO_API_KEY;
 
   let sendSmtpEmail = new brevo.SendSmtpEmail();
 
@@ -28,7 +29,7 @@ const sendEmail = async (to, subject, htmlContent, params = {}) => {
     return data;
   } catch (error) {
     console.error("Error al enviar el email:", error);
-    throw error;
+    throw new AppError(`Error al enviar el email: ${error.message}`, 500);
   }
 };
 

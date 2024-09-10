@@ -7,7 +7,10 @@ import {
   failLogin,
   failRegister,
   googleCallback,
+  forgotPassword,
+  resetPassword,
 } from "../controllers/authController.js";
+import { catchAsync } from "../middlewares/errorHandlers/catchAsync.js";
 
 const router = Router();
 
@@ -19,11 +22,11 @@ router.post(
     failureMessage: true,
     session: false,
   }),
-  register
+  catchAsync(register)
 );
 
 // Ruta de fallo en el registro
-router.get("/failregister", failRegister);
+router.get("/failregister", catchAsync(failRegister));
 
 // Ruta de login
 router.post(
@@ -32,17 +35,17 @@ router.post(
     failureRedirect: "/auth/faillogin",
     session: false,
   }),
-  login
+  catchAsync(login)
 );
 
 // Ruta de fallo en el login
-router.get("/faillogin", failLogin);
+router.get("/faillogin", catchAsync(failLogin));
 
 // Ruta de logout (protegida con JWT)
 router.post(
   "/logout",
   passport.authenticate("jwt", { session: false }),
-  logout
+  catchAsync(logout)
 );
 
 // Ruta para iniciar el proceso de autenticación con Google
@@ -58,13 +61,13 @@ router.get(
     failureRedirect: "/auth/faillogin",
     session: false,
   }),
-  googleCallback
+  catchAsync(googleCallback)
 );
 
 // Ruta para solicitar restablecimiento de contraseña
-router.post("/forgot-password", forgotPassword);
+router.post("/forgot-password", catchAsync(forgotPassword));
 
 // Ruta para restablecer la contraseña
-router.post("/reset-password/:token", resetPassword);
+router.post("/reset-password/:token", catchAsync(resetPassword));
 
 export default router;

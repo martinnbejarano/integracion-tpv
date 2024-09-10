@@ -1,4 +1,4 @@
-import { tableApi } from "../controllers/tableController.js"; // Example of another controller
+import { tableApi } from "../../controllers/tableController.js"; // Example of another controller
 
 class EntityMiddleware {
   constructor(api, entityType) {
@@ -8,12 +8,12 @@ class EntityMiddleware {
 
   checkExistence = async (req, res, next) => {
     try {
-      const allEntities = await this.api.getAll();
-      const entity = allEntities.find((e) => e.id === req.params.id);
+      const entity = await this.api.getOne(req.params.id);
       if (entity) {
-        return next(); // If no error, continue
+        req.entity = entity; // Adjunta la entidad a req
+        return next();
       }
-      next("error"); // Pass the error if the entity was not found
+      next("error");
     } catch (error) {
       next(error);
     }

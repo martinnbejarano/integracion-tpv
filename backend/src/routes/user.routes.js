@@ -6,6 +6,7 @@ import {
   cancelAccountDeletion,
   deleteUser,
 } from "../controllers/userController.js";
+import { catchAsync } from "../middlewares/errorHandlers/catchAsync.js";
 
 const router = Router();
 
@@ -13,22 +14,22 @@ const router = Router();
 router.get(
   "/current",
   passport.authenticate("jwt", { session: false }),
-  getCurrentUser
+  catchAsync(getCurrentUser)
 );
 router.post(
   "/request-account-deletion",
   passport.authenticate("jwt", { session: false }),
-  requestAccountDeletion
+  catchAsync(requestAccountDeletion)
 );
 router.post(
   "/cancel-account-deletion",
   passport.authenticate("jwt", { session: false }),
-  cancelAccountDeletion
+  catchAsync(cancelAccountDeletion)
 );
 router.delete(
   "/delete-account",
   passport.authenticate("jwt", { session: false }),
-  deleteUser
+  catchAsync(deleteUser)
 );
 
 export default router;
